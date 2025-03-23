@@ -1,17 +1,13 @@
-class LocationLog {
-  final String logName;
-  final String description;
-  final DateTime addDate;
-  final double rating;
-  final double latitude;
-  final double longitude;
+import 'package:drift/drift.dart';
 
-  const LocationLog({
-    required this.logName,
-    required this.description,
-    required this.addDate,
-    required this.rating,
-    this.latitude = 0,
-    this.longitude = 0,
-  });
+
+class LocationLog extends Table{
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get logName => text()();
+  TextColumn get description => text()();
+  RealColumn get rating => real()();
+  RealColumn get latitude => real()();
+  RealColumn get longitude => real()();
+  TextColumn get thumbnailPath => text().clientDefault(() => '')();
+  DateTimeColumn get addDate => dateTime()();
 }

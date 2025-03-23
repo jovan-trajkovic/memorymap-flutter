@@ -1,30 +1,41 @@
 import 'package:flutter/material.dart';
-
-import '../objects/location_log.dart';
+import 'package:memory_map/database/memory_map_database.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final List<LocationLog> logs = [
-      LocationLog(
+    final List<LocationLogData> logs = [
+      LocationLogData(
+        id: 0,
         logName: "Beach Trip",
         description: "Visited the beach.",
         addDate: DateTime(2024, 3, 18),
         rating: 2.0,
+        latitude: 0.0,
+        longitude: 0.0,
+        thumbnailPath: ''
       ),
-      LocationLog(
+      LocationLogData(
+        id: 1,
         logName: "Mountain Hike",
         description: "Hiked up the hill.",
         addDate: DateTime(2024, 3, 10),
         rating: 3.5,
+        latitude: 0,
+        longitude: 0,
+        thumbnailPath: ''
       ),
-      LocationLog(
+      LocationLogData(
+        id: 2,
         logName: "City Walk",
         description: "Explored downtown.",
         addDate: DateTime(2024, 2, 25),
         rating: 10.0,
+        latitude: 0,
+        longitude: 0,
+        thumbnailPath: ''
       ),
     ];
 
