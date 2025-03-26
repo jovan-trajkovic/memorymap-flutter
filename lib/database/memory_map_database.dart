@@ -38,4 +38,8 @@ class MemoryMapDatabase extends _$MemoryMapDatabase {
   Future<int> insertLog(LocationLogCompanion log) async {
     return await into(locationLog).insert(log);
   }
+
+  Future<int> deleteLog(int id) async {
+    return await (delete(locationLog)..where((tbl) => tbl.id.equals(id))).go();
+  }
 }

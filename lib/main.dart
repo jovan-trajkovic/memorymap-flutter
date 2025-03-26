@@ -1,8 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:memory_map/database/memory_map_database.dart';
 import 'package:memory_map/routes/router.dart';
+import 'package:provider/provider.dart';
+import 'log_provider.dart';
+
+/*ChangeNotifierProvider makes the provider and listens for changes,
+* updating the UI elements that depend on the provider.
+* Provider is usually always initialized like this.
+*/
 
 void main() {
-  runApp(const MyApp());
+  final memoryMapDatabase = MemoryMapDatabase();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LogProvider(database: memoryMapDatabase)),
+      ],
+      child: MyApp(),
+    ),
+  );
+  //runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
