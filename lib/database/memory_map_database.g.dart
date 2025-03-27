@@ -46,11 +46,11 @@ class $LocationLogTable extends LocationLog
   );
   static const VerificationMeta _ratingMeta = const VerificationMeta('rating');
   @override
-  late final GeneratedColumn<double> rating = GeneratedColumn<double>(
+  late final GeneratedColumn<int> rating = GeneratedColumn<int>(
     'rating',
     aliasedName,
     false,
-    type: DriftSqlType.double,
+    type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
   static const VerificationMeta _latitudeMeta = const VerificationMeta(
@@ -84,7 +84,8 @@ class $LocationLogTable extends LocationLog
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+    clientDefault: () => '',
   );
   static const VerificationMeta _addDateMeta = const VerificationMeta(
     'addDate',
@@ -174,8 +175,6 @@ class $LocationLogTable extends LocationLog
           _thumbnailPathMeta,
         ),
       );
-    } else if (isInserting) {
-      context.missing(_thumbnailPathMeta);
     }
     if (data.containsKey('add_date')) {
       context.handle(
@@ -211,7 +210,7 @@ class $LocationLogTable extends LocationLog
           )!,
       rating:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
+            DriftSqlType.int,
             data['${effectivePrefix}rating'],
           )!,
       latitude:
@@ -247,7 +246,7 @@ class LocationLogData extends DataClass implements Insertable<LocationLogData> {
   final int id;
   final String logName;
   final String description;
-  final double rating;
+  final int rating;
   final double latitude;
   final double longitude;
   final String thumbnailPath;
@@ -268,7 +267,7 @@ class LocationLogData extends DataClass implements Insertable<LocationLogData> {
     map['id'] = Variable<int>(id);
     map['log_name'] = Variable<String>(logName);
     map['description'] = Variable<String>(description);
-    map['rating'] = Variable<double>(rating);
+    map['rating'] = Variable<int>(rating);
     map['latitude'] = Variable<double>(latitude);
     map['longitude'] = Variable<double>(longitude);
     map['thumbnail_path'] = Variable<String>(thumbnailPath);
@@ -298,7 +297,7 @@ class LocationLogData extends DataClass implements Insertable<LocationLogData> {
       id: serializer.fromJson<int>(json['id']),
       logName: serializer.fromJson<String>(json['logName']),
       description: serializer.fromJson<String>(json['description']),
-      rating: serializer.fromJson<double>(json['rating']),
+      rating: serializer.fromJson<int>(json['rating']),
       latitude: serializer.fromJson<double>(json['latitude']),
       longitude: serializer.fromJson<double>(json['longitude']),
       thumbnailPath: serializer.fromJson<String>(json['thumbnailPath']),
@@ -312,7 +311,7 @@ class LocationLogData extends DataClass implements Insertable<LocationLogData> {
       'id': serializer.toJson<int>(id),
       'logName': serializer.toJson<String>(logName),
       'description': serializer.toJson<String>(description),
-      'rating': serializer.toJson<double>(rating),
+      'rating': serializer.toJson<int>(rating),
       'latitude': serializer.toJson<double>(latitude),
       'longitude': serializer.toJson<double>(longitude),
       'thumbnailPath': serializer.toJson<String>(thumbnailPath),
@@ -324,7 +323,7 @@ class LocationLogData extends DataClass implements Insertable<LocationLogData> {
     int? id,
     String? logName,
     String? description,
-    double? rating,
+    int? rating,
     double? latitude,
     double? longitude,
     String? thumbnailPath,
@@ -400,7 +399,7 @@ class LocationLogCompanion extends UpdateCompanion<LocationLogData> {
   final Value<int> id;
   final Value<String> logName;
   final Value<String> description;
-  final Value<double> rating;
+  final Value<int> rating;
   final Value<double> latitude;
   final Value<double> longitude;
   final Value<String> thumbnailPath;
@@ -419,23 +418,22 @@ class LocationLogCompanion extends UpdateCompanion<LocationLogData> {
     this.id = const Value.absent(),
     required String logName,
     required String description,
-    required double rating,
+    required int rating,
     required double latitude,
     required double longitude,
-    required String thumbnailPath,
+    this.thumbnailPath = const Value.absent(),
     required DateTime addDate,
   }) : logName = Value(logName),
        description = Value(description),
        rating = Value(rating),
        latitude = Value(latitude),
        longitude = Value(longitude),
-       thumbnailPath = Value(thumbnailPath),
        addDate = Value(addDate);
   static Insertable<LocationLogData> custom({
     Expression<int>? id,
     Expression<String>? logName,
     Expression<String>? description,
-    Expression<double>? rating,
+    Expression<int>? rating,
     Expression<double>? latitude,
     Expression<double>? longitude,
     Expression<String>? thumbnailPath,
@@ -457,7 +455,7 @@ class LocationLogCompanion extends UpdateCompanion<LocationLogData> {
     Value<int>? id,
     Value<String>? logName,
     Value<String>? description,
-    Value<double>? rating,
+    Value<int>? rating,
     Value<double>? latitude,
     Value<double>? longitude,
     Value<String>? thumbnailPath,
@@ -488,7 +486,7 @@ class LocationLogCompanion extends UpdateCompanion<LocationLogData> {
       map['description'] = Variable<String>(description.value);
     }
     if (rating.present) {
-      map['rating'] = Variable<double>(rating.value);
+      map['rating'] = Variable<int>(rating.value);
     }
     if (latitude.present) {
       map['latitude'] = Variable<double>(latitude.value);
@@ -537,10 +535,10 @@ typedef $$LocationLogTableCreateCompanionBuilder =
       Value<int> id,
       required String logName,
       required String description,
-      required double rating,
+      required int rating,
       required double latitude,
       required double longitude,
-      required String thumbnailPath,
+      Value<String> thumbnailPath,
       required DateTime addDate,
     });
 typedef $$LocationLogTableUpdateCompanionBuilder =
@@ -548,7 +546,7 @@ typedef $$LocationLogTableUpdateCompanionBuilder =
       Value<int> id,
       Value<String> logName,
       Value<String> description,
-      Value<double> rating,
+      Value<int> rating,
       Value<double> latitude,
       Value<double> longitude,
       Value<String> thumbnailPath,
@@ -579,7 +577,7 @@ class $$LocationLogTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<double> get rating => $composableBuilder(
+  ColumnFilters<int> get rating => $composableBuilder(
     column: $table.rating,
     builder: (column) => ColumnFilters(column),
   );
@@ -629,7 +627,7 @@ class $$LocationLogTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<double> get rating => $composableBuilder(
+  ColumnOrderings<int> get rating => $composableBuilder(
     column: $table.rating,
     builder: (column) => ColumnOrderings(column),
   );
@@ -675,7 +673,7 @@ class $$LocationLogTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<double> get rating =>
+  GeneratedColumn<int> get rating =>
       $composableBuilder(column: $table.rating, builder: (column) => column);
 
   GeneratedColumn<double> get latitude =>
@@ -734,7 +732,7 @@ class $$LocationLogTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> logName = const Value.absent(),
                 Value<String> description = const Value.absent(),
-                Value<double> rating = const Value.absent(),
+                Value<int> rating = const Value.absent(),
                 Value<double> latitude = const Value.absent(),
                 Value<double> longitude = const Value.absent(),
                 Value<String> thumbnailPath = const Value.absent(),
@@ -754,10 +752,10 @@ class $$LocationLogTableTableManager
                 Value<int> id = const Value.absent(),
                 required String logName,
                 required String description,
-                required double rating,
+                required int rating,
                 required double latitude,
                 required double longitude,
-                required String thumbnailPath,
+                Value<String> thumbnailPath = const Value.absent(),
                 required DateTime addDate,
               }) => LocationLogCompanion.insert(
                 id: id,

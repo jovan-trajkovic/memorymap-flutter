@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:memory_map/database/memory_map_database.dart';
 import 'package:memory_map/log_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:drift/drift.dart' as drift;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,6 +10,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  /*
   @override void initState() {
     super.initState();
     Future.microtask(() {
@@ -20,14 +19,13 @@ class _HomeScreenState extends State<HomeScreen> {
         logName: drift.Value("Beach Trip"),
         description: drift.Value("Visited the beach."),
         addDate: drift.Value(DateTime(2024, 3, 18)),
-        rating: drift.Value(2.0),
+        rating: drift.Value(2),
         latitude: drift.Value(0.0),
         longitude: drift.Value(0.0),
-        thumbnailPath: drift.Value(''),
       ));
-      //logProvider.loadLogs();
+      logProvider.loadLogs();
     });
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
