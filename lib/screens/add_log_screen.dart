@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:memory_map/database/memory_map_database.dart';
 import 'package:memory_map/log_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class AddLogScreen extends StatefulWidget {
   const AddLogScreen({super.key});
@@ -14,34 +17,31 @@ class AddLogScreen extends StatefulWidget {
 class _AddLogScreenState extends State<AddLogScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _latitudeController = TextEditingController();
-  final TextEditingController _longitudeController = TextEditingController();
   int _rating = 5;
+  LatLng? _userLocation;
+  LatLng _logLocation = LatLng(
+    10,
+    10,
+  ); //for now it has a placeholder value, till i figure everything out
 
   void buttonPressed() {
     final logProvider = Provider.of<LogProvider>(context, listen: false);
 
     if (_titleController.text.isNotEmpty &&
         _descriptionController.text.isNotEmpty &&
-        _latitudeController.text.isNotEmpty &&
-        _longitudeController.text.isNotEmpty) {
-      //no need to check if coords are proper numbers, since they will be added from a map
-      //todo: gonna add a map to select the location
+        _logLocation != null) {
+      //todo: fix the user and log locations - log should not have a hardcoded value and should reset on button add
       var log = LocationLogCompanion(
         logName: drift.Value(_titleController.text),
         description: drift.Value(_descriptionController.text),
         rating: drift.Value(_rating),
-        latitude: drift.Value(double.tryParse(_latitudeController.text) ?? 0.0),
-        longitude: drift.Value(
-          double.tryParse(_longitudeController.text) ?? 0.0,
-        ),
+        latitude: drift.Value(_logLocation.latitude),
+        longitude: drift.Value(_logLocation.longitude),
         addDate: drift.Value(DateTime.now()),
       );
 
       _titleController.clear();
       _descriptionController.clear();
-      _latitudeController.clear();
-      _longitudeController.clear();
       setState(() {
         _rating = 5;
       });
@@ -54,6 +54,31 @@ class _AddLogScreenState extends State<AddLogScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _getUserLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.deniedForever) return;
+    }
+
+    Position position = await Geolocator.getCurrentPosition(
+      locationSettings: LocationSettings(accuracy: LocationAccuracy.medium),
+    );
+
+    setState(() {
+      _userLocation = LatLng(position.latitude, position.longitude);
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserLocation();
   }
 
   @override
@@ -90,16 +115,42 @@ class _AddLogScreenState extends State<AddLogScreen> {
               },
             ),
             const SizedBox(height: 10),
-            TextFormField(
-              controller: _latitudeController,
-              decoration: const InputDecoration(labelText: 'Latitude'),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 10),
-            TextFormField(
-              controller: _longitudeController,
-              decoration: const InputDecoration(labelText: 'Longitude'),
-              keyboardType: TextInputType.number,
+            SizedBox(
+              width: double.infinity,
+              height: 400,
+              child: FlutterMap(
+                options: MapOptions(
+                  initialCenter: _userLocation ?? LatLng(0, 0),
+                  initialZoom: 10,
+                  onTap: (tapPosition, point) {
+                    setState(() {
+                      _logLocation = point;
+                    });
+                  },
+                  minZoom: 3,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    subdomains: ['a', 'b', 'c'],
+                  ),
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: _logLocation,
+                        width: 40,
+                        height: 40,
+                        child: Icon(
+                          Icons.location_pin,
+                          color: Colors.red,
+                          size: 40,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 20),
             SizedBox(
