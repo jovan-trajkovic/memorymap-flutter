@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:memory_map/log_provider.dart';
 import 'package:provider/provider.dart';
@@ -65,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemBuilder: (context, index) {
                       final log = logProvider.logs[index];
                       return ListTile(
-                        leading: Image.asset('assets/placeholder.jpg'),
+                        leading: log.thumbnailPath != '' ? Image.file(File(log.thumbnailPath)) : Image.asset('assets/placeholder.jpg'),
                         title: Text(log.logName),
                         subtitle: Text(
                           "${log.description}\nRating: ${log.rating}",

@@ -1,8 +1,8 @@
-
 import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:memory_map/objects/log_image.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:memory_map/objects/location_log.dart';
@@ -23,7 +23,7 @@ LazyDatabase _openConnection(){
   });
 }
 
-@DriftDatabase(tables: [LocationLog])
+@DriftDatabase(tables: [LocationLog, LogImage])
 class MemoryMapDatabase extends _$MemoryMapDatabase {
   MemoryMapDatabase() : super(_openConnection());
 
@@ -42,4 +42,23 @@ class MemoryMapDatabase extends _$MemoryMapDatabase {
   Future<int> deleteLog(int id) async {
     return await (delete(locationLog)..where((tbl) => tbl.id.equals(id))).go();
   }
+
+  Future<List<LogImageData>> getImagesForLog(int logId) async {
+    return await (select(logImage)..where((tbl) => tbl.logId.equals(logId))).get();
+  }
+
+  Future<int> insertImage(LogImageCompanion image) async {
+    return await into(logImage).insert(image);
+  }
+
+  Future<void> insertImages(List<LogImageCompanion> images) async {
+    await batch((batch) {
+      batch.insertAll(logImage, images);
+    });
+  }
 }
+
+/*Putting .. is Dart's cascade notation, when a method does not return the
+* original object, we can use .. to call another method on that object,
+* without retyping the name. Methods can still be chained even though they
+* don’t return the current object.*/

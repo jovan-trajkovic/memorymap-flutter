@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:memory_map/database/memory_map_database.dart';
@@ -6,6 +8,10 @@ import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:image_picker/image_picker.dart';
+
+/*Flutter map is used only to be able to show it on the desktop app.
+* Might add google maps on android.*/
 
 class AddLogScreen extends StatefulWidget {
   const AddLogScreen({super.key});
@@ -19,33 +25,33 @@ class _AddLogScreenState extends State<AddLogScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   int _rating = 5;
   LatLng? _userLocation;
-  LatLng _logLocation = LatLng(
-    10,
-    10,
-  ); //for now it has a placeholder value, till i figure everything out
+  LatLng? _logLocation;
+  List<XFile> _images = [];
 
-  void buttonPressed() {
+  void _buttonPressed() {
     final logProvider = Provider.of<LogProvider>(context, listen: false);
 
     if (_titleController.text.isNotEmpty &&
         _descriptionController.text.isNotEmpty &&
         _logLocation != null) {
-      //todo: fix the user and log locations - log should not have a hardcoded value and should reset on button add
       var log = LocationLogCompanion(
         logName: drift.Value(_titleController.text),
         description: drift.Value(_descriptionController.text),
         rating: drift.Value(_rating),
-        latitude: drift.Value(_logLocation.latitude),
-        longitude: drift.Value(_logLocation.longitude),
+        latitude: drift.Value(_logLocation!.latitude),
+        longitude: drift.Value(_logLocation!.longitude),
         addDate: drift.Value(DateTime.now()),
       );
 
       _titleController.clear();
       _descriptionController.clear();
+      logProvider.addLog(log, List<XFile>.from(_images));
+
       setState(() {
+        _logLocation = null;
         _rating = 5;
+        _images.clear();
       });
-      logProvider.addLog(log);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -72,6 +78,18 @@ class _AddLogScreenState extends State<AddLogScreen> {
 
     setState(() {
       _userLocation = LatLng(position.latitude, position.longitude);
+    });
+  }
+
+  Future<void> _pickImages() async {
+    final ImagePicker imagePicker = ImagePicker();
+    final List<XFile> list = await imagePicker.pickMultiImage(
+      limit: 6,
+      imageQuality: 70,
+      requestFullMetadata: false,
+    );
+    setState(() {
+      _images = list;
     });
   }
 
@@ -121,13 +139,18 @@ class _AddLogScreenState extends State<AddLogScreen> {
               child: FlutterMap(
                 options: MapOptions(
                   initialCenter: _userLocation ?? LatLng(0, 0),
-                  initialZoom: 10,
+                  initialZoom: 5,
+                  minZoom: 3,
                   onTap: (tapPosition, point) {
                     setState(() {
                       _logLocation = point;
                     });
                   },
-                  minZoom: 3,
+                  onSecondaryTap: (tapPosition, point) {
+                    setState(() {
+                      _logLocation = null;
+                    });
+                  },
                 ),
                 children: [
                   TileLayer(
@@ -135,21 +158,74 @@ class _AddLogScreenState extends State<AddLogScreen> {
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     subdomains: ['a', 'b', 'c'],
                   ),
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: _logLocation,
-                        width: 40,
-                        height: 40,
-                        child: Icon(
-                          Icons.location_pin,
-                          color: Colors.red,
-                          size: 40,
+                  if (_logLocation != null)
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: _logLocation!,
+                          width: 40,
+                          height: 40,
+                          child: Transform.translate(
+                            offset: const Offset(
+                              0,
+                              -15,
+                            ), // I had to offset it a little, so the marker is on the tap point
+                            child: const Icon(
+                              Icons.location_pin,
+                              color: Colors.red,
+                              size: 40,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+            SizedBox(height: 10),
+            if (_images.isNotEmpty)
+              SizedBox(
+                height: 80,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _images.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          8,
+                        ), // Rounded corners
+                        child: Image.file(
+                          File(_images[index].path),
+                          width: 80, // Thumbnail size
+                          height: 80,
+                          fit: BoxFit.cover, // Crop to fill box
                         ),
                       ),
-                    ],
+                    );
+                  },
+                ),
+              ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 26),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
+                ),
+                onPressed: () => _pickImages(),
+                child: Text(
+                  'Add images',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Theme.of(context).colorScheme.inverseSurface,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -163,7 +239,7 @@ class _AddLogScreenState extends State<AddLogScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () => buttonPressed(),
+                onPressed: () => _buttonPressed(),
                 child: Text(
                   'Save Log',
                   style: TextStyle(
